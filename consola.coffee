@@ -2,12 +2,13 @@
 # console-like CMS
 __root = this
 # consoleADM and settings
-consoleADM = {}
-consoleADM.default =
+window.consoleADM = {}
+window.consoleADM.default =
 	user_default: "anonimo"
 	sitename: "consolecms"
 	principal: "home"
 	consoleId: "consola"
+	resizable: true
 
 listen = (el, m, cb)->
 	if el.attachEvent
@@ -68,6 +69,11 @@ class consoleControl
 		@info.divObject.style.display = "block";
 	close: ()->
 		@info.divObject.style.display = "none";
+	toggle: ()->
+		if @info.divObject.style.display is "block" or @info.divObject.style.display is ""
+		   @info.divObject.style.display = "none"
+		else
+		   @info.divObject.style.display = "block"
 	##--------------------------------------------------------
 	send: (c)->
 		obj =
@@ -106,6 +112,23 @@ class consoleControl
 	onSend: (fn)->
 		@response.callback = fn
 
+class elasticfn
+	data: {status: false, mouse: 0, height: 100}
+	constructor: (@obj, @consoleObj)->
+		@consoleObj.style["height"] = @data.height+"px"
+		listen @obj, "mousedown", (d)=>
+			@data.mouse = d.y
+			@data.status = true;
+			@obj.style.background = "#FFF";
+			document.onselectstart = ()-> return false; # Ie, chrome selection
+			return false # Firefox Selection false
+		listen window, "mouseup", (d)=>
+			if @data.status
+				@data.height = (@data.height)+(@data.mouse-d.y)
+				@consoleObj.style["height"]  = @data.height+"px"
+				@obj.style.background = "transparent";
+				@data.status = false
+ 
 init = ()->
 	(()->
 		div = document.getElementById(consoleADM.default.consoleId);
@@ -115,10 +138,13 @@ init = ()->
 	       	el.id = consoleADM.default.consoleId
 	       	getBody = document.getElementsByTagName "body"
 	       	getBody[0].insertBefore el, getBody[0].childNodes[0];
+	       	elastic = document.createElement "span"
+	       	elastic.id = "elastic";
+	       	document.getElementById(consoleADM.default.consoleId).appendChild(elastic)
+	       	resize = new elasticfn elastic, document.getElementById(consoleADM.default.consoleId)
 	)();
 	# Global data
 	window.consolecms = new consoleControl consoleADM.default;
-
 # Fix jquery load conflict with document:ready
 if jQuery
 	$(document).ready init
