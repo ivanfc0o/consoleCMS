@@ -102,27 +102,31 @@ class consoleControl
 
 	onSend: (fn)->
 		@response.callback = fn
-	default_commands: (o)->
-		@commands = [
+	commands: [
 			'(cd)(\\s+)((?:[a-z][a-z0-9_]*))' # CD
 			'(cu)(\\s+)((?:[a-z][a-z0-9_]*))' # Change name
 			'(cs)(\\s+)((?:[a-z][a-z0-9_]*))' # Change sitename
 			'(exit)' # close console
 			'clear' # clean console
-		]
-		@commands_fns = [
-			(nm)-> consolecms.info.dir = nm
-			(nm)-> consolecms.info.user = nm
-			(nm)-> consolecms.info.site = nm
+	]
+	commands_fns: [
+			(nm)-> consolecms.info.dir = nm.values[1]
+			(nm)-> consolecms.info.user = nm.values[1]
+			(nm)-> consolecms.info.site = nm.values[1]
 			()-> consolecms.close()
-		]
+			() -> alert "dd"
+	]
+	default_commands: (o)->
 		for i in @commands
 			if o.val.match(@commands[_i])
-				switch (o.values.length)
-					when 3 then @commands_fns[_i](o.values[2]);
-					else @commands_fns[_i](o.values[1]);
+				@response.data.last = o.val;
+				@commands_fns[_i](@response)
 				return true
 		false
+	setCommand: (expr, fn) ->
+		regExp = new RegExp(expr)
+		@commands.push regExp
+		@commands_fns.push fn
 	run: (d)->
 		@info.user = d.user
 		@info.dir = d.dir
