@@ -54,6 +54,7 @@ class consoleControl
 	##--------------------------------------------------------
 	open: ()->
 		@info.divObject.style.display = "block";
+		document.getElementById("active_input").focus();
 	close: ()->
 		@info.divObject.style.display = "none";
 	toggle: ()->
