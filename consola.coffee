@@ -103,23 +103,24 @@ class consoleControl
 	onSend: (fn)->
 		@response.callback = fn
 	default_commands: (o)->
-		expd = [
+		@commands = [
 			'(cd)(\\s+)((?:[a-z][a-z0-9_]*))' # CD
 			'(cu)(\\s+)((?:[a-z][a-z0-9_]*))' # Change name
 			'(cs)(\\s+)((?:[a-z][a-z0-9_]*))' # Change sitename
 			'(exit)' # close console
+			'clear' # clean console
 		]
-		makefn = [
+		@commands_fns = [
 			(nm)-> consolecms.info.dir = nm
 			(nm)-> consolecms.info.user = nm
 			(nm)-> consolecms.info.site = nm
 			()-> consolecms.close()
 		]
-		for i in expd
-			if o.val.match(expd[_i])
+		for i in @commands
+			if o.val.match(@commands[_i])
 				switch (o.values.length)
-					when 3 then makefn[_i](o.values[2]);
-					else makefn[_i](o.values[1]);
+					when 3 then @commands_fns[_i](o.values[2]);
+					else @commands_fns[_i](o.values[1]);
 				return true
 		false
 	run: (d)->
