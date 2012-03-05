@@ -7,7 +7,6 @@ listen = (el, m, cb)->
 	if el.addEventListener
 		el.addEventListener m, cb, false
 window.DIV_CONSOLE = "console"
-# Clase controladora
 class consoleControl
 	info: {}
 	constructor: (data)->
