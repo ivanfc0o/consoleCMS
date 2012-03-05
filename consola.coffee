@@ -1,30 +1,18 @@
 # @author: Iván Ibarra - ivanfc0o@gmail.com 
 # console-like CMS
 __root = this
-# consoleADM and settings
-consoleADM = {}
-consoleADM.default =
-	user_default: "anonymous"
-	sitename: "consolecms"
-	principal: "home"
-	consoleId: "console"
-	resizable: true
-
 listen = (el, m, cb)->
 	if el.attachEvent
 		el.attachEvent "on"+m, cb;
 	if el.addEventListener
 		el.addEventListener m, cb, false
+window.DIV_CONSOLE = "console"
 # Clase controladora
 class consoleControl
 	info: {}
 	constructor: (data)->
-		@info.dir = data.principal
-		@info.div = data.consoleId
-		@info.user = data.user_default
-		@info.site = data.sitename
-		@info.divObject = @response.data.console = document.getElementById data.consoleId
-		@line()
+		@info.div = window.DIV_CONSOLE
+		@info.divObject = @response.data.console = document.getElementById window.DIV_CONSOLE
 	line: ()->
 		objcls = this
 		idActive = "active_input"
@@ -134,10 +122,11 @@ class consoleControl
 					else makefn[_i](o.values[1]);
 				return true
 		false
-	default: (d)->
+	run: (d)->
 		@info.user = d.user
 		@info.dir = d.dir
 		@info.site = d.sitename
+		@line();
 
 class elasticfn
 	data: {status: false, mouse: 0, height: 400}
@@ -172,20 +161,21 @@ class elasticfn
  
 init = ()->
 	(()->
-		div = document.getElementById consoleADM.default.consoleId
+		div = document.getElementById DIV_CONSOLE
 		if div is null
 	       	#insertar div base
 	       	el = document.createElement "div"
-	       	el.id = consoleADM.default.consoleId
+	       	el.id = DIV_CONSOLE
 	       	getBody = document.getElementsByTagName "body"
 	       	getBody[0].insertBefore el, getBody[0].childNodes[0];
 	       	elastic = document.createElement "span"
 	       	elastic.id = "elastic";
-	       	document.getElementById(consoleADM.default.consoleId).appendChild(elastic)
-	       	resize = new elasticfn elastic, document.getElementById(consoleADM.default.consoleId)
+	       	document.getElementById(DIV_CONSOLE).appendChild(elastic)
+	       	resize = new elasticfn elastic, document.getElementById(DIV_CONSOLE)
 	)();
 	# Global data
-	window.consolecms = new consoleControl consoleADM.default;
+	window.consolecms = new consoleControl();
+		
 # Fix jquery load conflict with document:ready
 if jQuery
 	$(document).ready init
