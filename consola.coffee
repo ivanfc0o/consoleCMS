@@ -2,12 +2,12 @@
 # console-like CMS
 __root = this
 # consoleADM and settings
-window.consoleADM = {}
-window.consoleADM.default =
-	user_default: "anonimo"
+consoleADM = {}
+consoleADM.default =
+	user_default: "anonymous"
 	sitename: "consolecms"
 	principal: "home"
-	consoleId: "consola"
+	consoleId: "console"
 	resizable: true
 
 listen = (el, m, cb)->
@@ -62,7 +62,7 @@ class consoleControl
 			if key_int is enter_key
 				val_c = document.getElementById("active_input").value
 				objcls.send(val_c)
-			chars = if @value.length is 0 then 1*15 else @value.length*15
+			chars = if @value.length is 0 then 1*10 else @value.length*10
 			@style.width = chars+"px"
 	##--------------------------------------------------------
 	open: ()->
@@ -79,9 +79,12 @@ class consoleControl
 		obj =
 		    val: c 
 		    values: c.split(" ");
-		@response.data.last = c;
-		@response.callback(obj);
-		@line();
+		if not @default_commands(obj)
+			@response.data.last = c;
+			@response.callback(obj);
+			@line();
+		else 
+			@line();
 	response: 
 		data: {}
 		callback: ()->
@@ -111,27 +114,65 @@ class consoleControl
 
 	onSend: (fn)->
 		@response.callback = fn
+	default_commands: (o)->
+		expd = [
+			'(cd)(\\s+)((?:[a-z][a-z0-9_]*))' # CD
+			'(cu)(\\s+)((?:[a-z][a-z0-9_]*))' # Change name
+			'(cs)(\\s+)((?:[a-z][a-z0-9_]*))' # Change sitename
+			'(exit)' # close console
+		]
+		makefn = [
+			(nm)-> consolecms.info.dir = nm
+			(nm)-> consolecms.info.user = nm
+			(nm)-> consolecms.info.site = nm
+			()-> consolecms.close()
+		]
+		for i in expd
+			if o.val.match(expd[_i])
+				switch (o.values.length)
+					when 3 then makefn[_i](o.values[2]);
+					else makefn[_i](o.values[1]);
+				return true
+		false
+	default: (d)->
+		@info.user = d.user
+		@info.dir = d.dir
+		@info.site = d.sitename
 
 class elasticfn
-	data: {status: false, mouse: 0, height: 100}
+	data: {status: false, mouse: 0, height: 400}
 	constructor: (@obj, @consoleObj)->
 		@consoleObj.style["height"] = @data.height+"px"
 		listen @obj, "mousedown", (d)=>
-			@data.mouse = d.y
+			##--------------------------------------------------------
+			shadow = document.createElement "div"
+			shadow.id = "shadow"
+			document.getElementsByTagName("body")[0].appendChild shadow
+			##--------------------------------------------------------
+			@data.mouse = d.clientY
 			@data.status = true;
 			@obj.style.background = "#FFF";
 			document.onselectstart = ()-> return false; # Ie, chrome selection
-			return false # Firefox Selection false
+			if not document.onselectstart
+				document.onmousedown = ()-> return false; # Firefox Selection false
 		listen window, "mouseup", (d)=>
 			if @data.status
-				@data.height = (@data.height)+(@data.mouse-d.y)
+				@data.height = (@data.height)+(@data.mouse-d.clientY)
 				@consoleObj.style["height"]  = @data.height+"px"
 				@obj.style.background = "transparent";
+				document.onselectstart = undefined;
+				document.onmousedown = undefined; # Firefox Selection false
+				shadow = document.getElementById "shadow"
+				shadow.parentNode.removeChild shadow
 				@data.status = false
+		listen window, "mousemove", (d)=>
+			if @data.status
+				shadow = document.getElementById "shadow"
+				shadow.style.top = d.pageY+"px"
  
 init = ()->
 	(()->
-		div = document.getElementById(consoleADM.default.consoleId);
+		div = document.getElementById consoleADM.default.consoleId
 		if div is null
 	       	#insertar div base
 	       	el = document.createElement "div"
