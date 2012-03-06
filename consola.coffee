@@ -8,7 +8,7 @@ listen = (el, m, cb)->
 		el.addEventListener m, cb, false
 window.DIV_CONSOLE = "console"
 class consoleControl
-	info: {}
+	info: {status: true}
 	constructor: (data)->
 		@info.div = window.DIV_CONSOLE
 		@info.divObject = @response.data.console = document.getElementById window.DIV_CONSOLE
@@ -62,6 +62,11 @@ class consoleControl
 		   @info.divObject.style.display = "none"
 		else
 		   @info.divObject.style.display = "block"
+	disable: (txt)-> 
+		@info.status = false
+		@info.disabled_txt = if txt then txt else "System is disabled"
+	enable: ()-> @info.status = true
+	isEnabled: ()-> return @info.status
 	##--------------------------------------------------------
 	send: (c)->
 		obj =
@@ -70,7 +75,10 @@ class consoleControl
 		if not @default_commands(obj)
 			@response.data.last = c;
 			@response.callback(obj);
-			@line();
+		if not @info.status
+			@response.info(@info.disabled_txt)
+			@line()
+			return false
 		else 
 			@line();
 	response: 
@@ -117,9 +125,12 @@ class consoleControl
 			() -> alert "dd"
 	]
 	default_commands: (o)->
+		if not @info.status
+			return false
 		for i in @commands
 			if o.val.match(@commands[_i])
 				@response.data.last = o.val;
+				@response.values = o.val.split(" ");
 				@commands_fns[_i](@response)
 				return true
 		false
@@ -182,7 +193,8 @@ init = ()->
 	window.consolecms = new consoleControl();
 		
 # Fix jquery load conflict with document:ready
-if jQuery
+##--------------------------------------------------------
+if window.jQuery
 	$(document).ready init
 else
 	listen window, "load", init
